@@ -1,8 +1,8 @@
 {
-  "name": "pitaya-cdk-template",
+  "name": "pirvate-site",
   "version": "0.1.0",
   "bin": {
-    "pitaya-cdk-template": "bin/pitaya-cdk-template.js"
+    "pitaya-pirvate-site": "bin/pitaya-pirvate-site.js"
   },
   "scripts": {
     "build": "tsc",

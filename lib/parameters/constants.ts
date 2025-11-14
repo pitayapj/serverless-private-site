@@ -20,18 +20,22 @@ export const envConstants = {
 			cidr: "10.0.0.0/16",
 			domain: "dev.template.com",
 			apiDomain: "api.dev.template.com",
-			codeBranch: "develop"
+			codeBranch: "develop",
+			iamIcMetadataUrl: "https://portal.sso.ap-northeast-1.amazonaws.com/saml/metadata/sample-medata-url"
 	},
 	[DeployEnvEnum.STG]: {
 			cidr: "10.1.0.0/16",
 			domain: "stg.template.com",
 			apiDomain: "api.stg.template.com",
-			codeBranch: "staging"
+			codeBranch: "staging",
+			iamIcMetadataUrl: "https://portal.sso.ap-northeast-1.amazonaws.com/saml/metadata/sample-medata-url"
 	},
 	[DeployEnvEnum.PROD]: {
 			cidr: "10.2.0.0/16",
 			domain: "template.com",
 			apiDomain: "api.template.com",
-			codeBranch: "main"
+			codeBranch: "main",
+			iamIcMetadataUrl: "https://portal.sso.ap-northeast-1.amazonaws.com/saml/metadata/sample-medata-url"
+
 	}
 }

@@ -1,27 +1,23 @@
 # CDK Template
 
-Pitaya CDK template 😃 (in Typescript)
+Private Site with serverless services
 
 ## Tables of contents
 
 - [Background](#background)
 - [Requirements](#requirements)
-- [Stacks structure](#stacks-structure)
-- [Files structure](#files-structure-and-its-meaning)
-- [Set up](#set-up)
-- [cdk diff](#cdk-diff)
-- [Future improvements](#future-improvements)
-- [Others](#others)
+- [Application Register](#saml-application-register)
+- [CDK Constants/Env Prepare](#cdk-constantsenvironment-prepare)
+- [Deploy CDK](#deploy-cdk-app)
+- [Finish Application Register](#finish-application-register)
 
 ## Background
 
-I don't want to initiate a blank CDK project anymore. So this is what I created.
-
-🚨 Wrapped everything inside CDK Pipeline, will be the default from now on.
+Extend from CDK template, this is an another template for private site with serverless services with authentication support for Google and AWS Identity Center (from now on will be refference as IAM-IC)
 
 ## Requirements
 
-Of course a PC (I'm using MacOS, so installation guide gonna be for MacOS)
+Set up necessary packages
 
 1. AWS CLI
 
@@ -30,130 +26,130 @@ Of course a PC (I'm using MacOS, so installation guide gonna be for MacOS)
 2. npm
 3. CDK Typescript
    ```sh
+   npm install
    npm -g install typescript
    ```
 4. AWS Credential (I will use AWS SSO Account with --profile flag)
 
-## Stacks structure
+## SAML Application Register
+Cognito support both SAML Metadata URL and Metadata file upload.
 
-The template include 4 major stacks, and will be (should be deploy in exact sequent):
+Representing them is Google(metadata file) and IAM-IC(url).
 
-- CDK Pipeline
-- Base Network
-- Stateful Resources
-- Stateless Resources
+You need to decide which authentication method to choose from and prepare each accordingly.
 
-Optional stack:
+You need to register application in either Google or IAM-IC
 
-- Non Production
+Since this cdk application support multiple environments deployment.
 
-`Non Production` is just an example stack. In this stack I created automation to shut down resources temporary outside business hour (not meant to use in production)
+You might need to repeat this step for each environment.
 
-You can deploy Stateful or Stateless independently, but they will still be depended on BaseNetwork stack .<bR>
-In other word, BaseNetwork will be created no matter which stack you create first.
+### Google
+- Following this guide from Google https://support.google.com/a/answer/6087519?hl=en#zippy=
 
-You can extend to more subsequent stacks. But the less stacks the better.
+- When reach **Google Identity Provider details**
 
-## Stages
+- Download the Metadata File and process to next step, Environment Prepare
 
-Stage can be consider a sub set of CDK project. A combination of stack(s) in a CDK application.
+### IAM-IC
+- Login to AWS Console
 
-Each stage can have just one or multiple stacks, which will be define in each stage's file.
+- Go to IAM Identity Center Service
 
-For our project, every environments have the same stack(s), so we can define just one single stage and multiply it for each environment.
+- Go to Application option from the left side panel
 
-Combination of stacks(stage) helps deployment easier. We can also deploy each stack independently (keep in mind that the specific stack still belong to a stage, and it has its own dependency)
+- Choose Add application -> I have an application I want to set up -> Click Next
 
-## Files structure and its meaning
+- An information screen apprear. Locate **IAM Identity Center SAML metadata file** and copy the URL
 
+- Process to next step
+
+## CDK Constants/Environment prepare
+
+### Google
+For Metadata file, add them to the root directory of this cdk project under format 
+
+GoogleIDPMetadata-{environment}.xml
+
+Environment string supports: **dev**, **stg** and **prod**
+
+### IAM-IC
+For URL, paste them directly into iamIcMetadataUrl property for each environemnt in `lib/parameters/constants.ts`
+
+You can use the example URL for the environment you haven't ready to deploy yet
+
+
+# Deploy CDK App
+Prepare other necessary parameter to deploy CDK app (reference　.env.example)
+
+- You need a repository in github for cdk app and established Github and Codestar connection
+- Along with choosing region and AWS account to deploy, edit said repo name and connection arn in .env file
+- Choose which environment to deploy or not deploy by commenting `lib/stacks/cdk-pipeline.ts` line 106-115
+- Deploy CDK app
+
+Deploy CDK app with 
 ```sh
-pitaya-cdk-template
-├── assets
-│   └── lambda-code.py #example lambda function's code
-├── bin
-│   └── pitaya-cdk-template.ts # entry point, stacks and stages will be loaded here
-├── lib
-│   ├── parameters #parameters for stacks
-│   │   ├── constants.ts #constants through out project
-│   │   └── env-config.ts #load parameter from .env files below
-│   ├── stacks #stacks' definition folder
-│   │   ├── base-network.ts #BaseNetwork Stack
-│   │   ├── cdk-pipeline.ts #CDK Pipeline Stack
-│   │   ├── non-production.ts #Non Production Stack
-│   │   ├── stateful-resources.ts #Stateful Stack
-│   │   └── stateless-resources.ts #Stateless Stack
-│   └── stages #deployment stages folder
-│       └── app-stage.ts #application stage
-└── .env.example #example parameters for CDK app
+cdk deploy CDKPipelineStack --profile pitaya
+# you will ne to wait for cdk pipeline to deploy your components
 ```
 
-## Set up
+## Finish application register
+You need to wait for CDK pipeline to deploy our application.
 
-### Git clone and bootstrap cdk to your AWS account
+After it finished, go to Cognito service, choose our newly created user pool and get 2 of follow information:
 
-```sh
-# Clone project
-git clone git@github.com:long2205/pitaya-cdk-template.git
+- User Pool ID, access **Overview** page from left side panel
+
+Format: region_abcdEFGH
+
+Ex: ap-northeast-1_lJBoDhD1D
+
+- Cognito DomainUrl, access **Domain** page from left side panel
+
+Format: https://&lt;customize-sub-domain&gt;.auth.region.amazoncognito.com
+
+### Compose ACS URL and Entity ID
+
+From User pool ID and Cognito DomainUrl we will need to create ACS URL and Entity ID
+
+- ACS URL
+append `/saml2/idpresponse` to last part of Cognito DomainUrl so we will have something like this 
+```
+https://&lt;customize-sub-domain&gt;.auth.region.amazoncognito.com/saml2/idpresponse
 ```
 
-- Register account ID, github connection and github repo name in `.env` file (you can create a copy from .env.example)
-- Also create a Secure String SSM parameter store named `/cdk/env`. Copy value from `.env` file to it.
-
-```sh
-# Bootstrap to your AWS
-cdk bootstrap --profile 𝘺𝘰𝘶𝘳-𝘱𝘳𝘰𝘧𝘪𝘭𝘦-𝘯𝘢𝘮𝘦
+- Entity ID
+Append `urn:amazon:cognito:sp:` before User pool ID so we have something like this 
+```
+urn:amazon:cognito:sp:ap-northeast-1_lJBoDhD1D
 ```
 
-### Deploy everything! (although production need manual confirmation before deploy)
+### Google
+Go back to our creating app screen.
 
-Since CDK Pipeline is wrapping around the whole infrastructure. Deploy everything for every environment with a single command:
+Continue setting it up:
 
-```sh
-cdk deploy CDKPipelineStack --profile 𝘺𝘰𝘶𝘳-𝘱𝘳𝘰𝘧𝘪𝘭𝘦-𝘯𝘢𝘮𝘦
+- Application Name: on your discretion
+- ACS URL(previously composed):  https://&lt;customize-sub-domain&gt;.auth.region.amazoncognito.com/saml2/idpresponse
+- Entity ID(previously composed): urn:amazon:cognito:sp:ap-northeast-1_lJBoDhD1D
+- Start URL: 
+go to Cognito, go to **App client** page from left side panel and copy the client id
+
+set the identity_provider to google-{enviroment}
+
+redirect_uri will be your app URL with the path /parseauth
+
+so it will be something like below
 ```
-
-**⚠️⚠️⚠️Please also keep in mind that this stack will be deploy in Tokyo Region as default⚠️⚠️⚠️**<br>
-Set different region in .env file if needed to.
-
-A visualization of stack order for one stage and its dependency:
-
-![stacks](/stacks.png)
-
-## cdk diff
-
-We can still compare, check different of stacks before deployment:
-
-```sh
-# Ex
-# Check different in every stacks of Development stage
-cdk diff "CDKPipelineStack/cdk-pipeline-dev/**" --profile 𝘺𝘰𝘶𝘳-𝘱𝘳𝘰𝘧𝘪𝘭𝘦-𝘯𝘢𝘮𝘦
-
-# Check different in Base Network stack of Staging stage
-cdk diff "CDKPipelineStack/cdk-pipeline-stg/base-network" --profile 𝘺𝘰𝘶𝘳-𝘱𝘳𝘰𝘧𝘪𝘭𝘦-𝘯𝘢𝘮𝘦
-
-# Check different in Stateless stack of Production stage
-cdk diff "CDKPipelineStack/cdk-pipeline-prod/stateless-resources" --profile 𝘺𝘰𝘶𝘳-𝘱𝘳𝘰𝘧𝘪𝘭𝘦-𝘯𝘢𝘮𝘦
+identity_provider=google-dev&client_id=6a06mi95j8e3dkjrcu9cd0e5od&scope=openid+phone+profile+email+aws.cognito.signin.user.admin&response_type=code&redirect_uri=https://example.com/parseauth
 ```
+- Mapping attribute: primary email -> email
 
-## Future improvements
+Also enable it for email group that you want to grant access to (or enable it for all users)
+### IAM-IC
+Easier than Google
 
-Create a website so you can check `cdk diff` before accept deployments.
+- ACS URL(previously composed):  https://&lt;customize-sub-domain&gt;.auth.region.amazoncognito.com/saml2/idpresponse
+- Entity ID(previously composed): urn:amazon:cognito:sp:ap-northeast-1_lJBoDhD1D
 
-## Others
-
-Update aws-cdk, its lib, others packages like dotenv and typescript.
-
-Check outdated packages:
-
-```sh
-npm outdated
-```
-
-Install latest:
-
-```sh
-npx ncu -u
-rm package-lock.json
-rm -Rf ./node_modules
-npm install
-```
+Create then edit mapping: ${user:email} -> primaryEmail

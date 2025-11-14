@@ -49,6 +49,7 @@ export class CdkPipelineStack extends Stack {
           `aws ssm get-parameter --with-decryption --name /cdk/env --output text --query 'Parameter.Value' > .env`,
           'npm ci', 'npm run build', 'npx cdk synth',
           'pip3 install ansi2html',
+          `{ echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')" ; FORCE_COLOR=1 npx cdk diff "CDKPipelineStack/dev/**" 2>&1; } | ansi2html > cdk-diff-output-dev.html`,
           `{ echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')" ; FORCE_COLOR=1 npx cdk diff "CDKPipelineStack/stg/**" 2>&1; } | ansi2html > cdk-diff-output-stg.html`,
           `{ echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')" ; FORCE_COLOR=1 npx cdk diff "CDKPipelineStack/prod/**" 2>&1; } | ansi2html > cdk-diff-output-prod.html`,
         ],

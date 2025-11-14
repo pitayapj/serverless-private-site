@@ -3,7 +3,7 @@ import {
   aws_certificatemanager as certificatemanager,
   aws_route53 as route53,
 } from 'aws-cdk-lib';
-import { DeployEnvEnum, envConstants, commonConstants } from "../../parameters";
+import { DeployEnvEnum, envConstants, commonConstants } from "../../../parameters";
 
 interface CertificatesConstructProps {
   deployEnv: DeployEnvEnum
@@ -11,7 +11,7 @@ interface CertificatesConstructProps {
 }
 
 export class CertificatesConstruct extends Construct {
-  public readonly lbCert: certificatemanager.Certificate
+  public readonly apiCert: certificatemanager.Certificate
   public readonly cloudfrontCert: certificatemanager.DnsValidatedCertificate
   constructor(scope: Construct, id: string, props: CertificatesConstructProps) {
     super(scope, id);
@@ -23,7 +23,7 @@ export class CertificatesConstruct extends Construct {
      * There is no real good way to get certificate for Cloudfront. See more -> https://github.com/aws/aws-cdk/discussions/23931
      * So, we gonna create it with a deprecated function.
      */
-    this.lbCert = new certificatemanager.Certificate(this, `${deployEnv}-${commonConstants.project}-cert`, {
+    this.apiCert = new certificatemanager.Certificate(this, `${deployEnv}-${commonConstants.project}-cert`, {
         domainName: envConstants[deployEnv].domain,
         subjectAlternativeNames: [`*.${envConstants[deployEnv].domain}`],
         validation: certificatemanager.CertificateValidation.fromDns(hostZone),

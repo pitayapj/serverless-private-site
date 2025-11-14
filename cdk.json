@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/pitaya-cdk-template.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/pitaya-pirvate-site.ts",
   "watch": {
     "include": [
       "**"
