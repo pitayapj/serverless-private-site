@@ -135,7 +135,7 @@ Continue setting it up:
 - Start URL: 
 go to Cognito, go to **App client** page from left side panel and copy the client id
 
-set the identity_provider to google-{enviroment}
+set the identity_provider to google-{enviroment} (this could be unify. Only 1 file if your apps use the same Google workspace)
 
 redirect_uri will be your app URL with the path /parseauth
 
